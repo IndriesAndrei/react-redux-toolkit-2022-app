@@ -1,34 +1,36 @@
-import { useSelector } from "react-redux";
-import { selectAllPosts } from "./postsSlice";
-import PostAuthor from "./PostAuthor";
-import TimeAgo from "./TimeAgo";
-import ReactionButtons from './ReactionButtons';
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { selectAllPosts, getPostsError, getPostsStatus, fetchPosts } from "./postsSlice";
+import PostsExcerpt from "./PostsExcerpt";
 
 export default function PostsList() {
+    const dispatch = useDispatch();
+
     // we can read data from the store with useSelector
     const posts = useSelector(selectAllPosts);
+    const postStatus = useSelector(getPostsStatus);
+    const error = useSelector(getPostsError);
 
-    // order the posts by sorting the posts and with slice() we are returning a new array
-    const orderedPosts = posts.slice().sort((a, b) => b.date.localeCompare(a.date));
+    useEffect(() => {
+        if (postStatus === 'idle') {
+            dispatch(fetchPosts());
+        }
+    }, [postStatus, dispatch]);
 
-    const renderedPosts = orderedPosts.map(post => (
-        <article key={post.id} className="card mb-2">
-            <div className="card-body">
-                <h3 className="card-title">{post.title}</h3>
-                <p>
-                    <b><PostAuthor userId={post.userId} /></b> /
-                    <TimeAgo timestamp={post.date} />
-                </p>
-                <p className="card-text">{post.content.substring(0, 100)}</p>
-                <ReactionButtons post={post} />
-            </div>
-        </article>
-    ))
+    let content;
+    if (postStatus === 'loading') {
+        content = <p>"Loading..."</p>;
+    } else if (postStatus === 'succeeded') {
+        const orderedPosts = posts.slice().sort((a, b) => b.date.localeCompare(a.date));
+        content = orderedPosts.map(post => <PostsExcerpt key={post.id} post={post} />)
+    } else if (postStatus === 'failed') {
+        content = <p>{error}</p>
+    }
 
     return (
         <div>
            <h2>Posts</h2>
-           {renderedPosts}
+           {content}
         </div>
     )
 }

@@ -7,6 +7,7 @@ function App() {
   return (
     <div className="container">
       {/* <Counter /> */}
+      <h1 className='text-center my-3'>React Redux Toolkit Posts App</h1>
       <AddPostForm />
       <PostsList />
     </div>
